@@ -1,100 +1,111 @@
 import streamlit as st
 import pandas as pd
-import datetime
-import random
 
-# --- Bannière statique professionnelle ---
+st.set_page_config(
+    page_title="kgfsignalCraft Bot | Vitrine",
+    layout="wide",
+    page_icon="⚡"
+)
+
+# === BANNIÈRE STRATÉGIQUE ===
 st.markdown("""
 <div style="
-    background: linear-gradient(90deg, #000428 0%, #004e92 100%);
-    padding: 40px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    margin-bottom: 30px;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    padding: 40px 25px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
 ">
-  <h1 style="
-      color: #FFD700;
-      text-align: center;
-      font-size: 3em;
-      margin: 0;
-      letter-spacing: 2px;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.7);
-  ">
-    KGF Trading Signal Bot
-  </h1>
-  <p style="
-      color: #ECECEC;
-      text-align: center;
-      font-size: 1.2em;
-      margin-top: 10px;
-      font-style: italic;
-  ">
-    Du silence des moqueries à la puissance des résultats.
-  </p>
+  <h1 style="color: #FFD700; font-size: 3em; margin-bottom: 0;">⚡ kgfsignalCraft Bot</h1>
+  <p style="color: #DDDDDD; font-size: 1.1em;">Optimisation stratégique des signaux binaires</p>
+  <p style="color: #AAAAAA; font-size: 0.9em; font-style: italic;">Par François | KGF Empire Digital</p>
 </div>
 """, unsafe_allow_html=True)
 
-# --- Section performance du jour ---
-st.subheader("📊 Performance du jour")
+# === LOGO CENTRAL INTÉGRÉ ===
+st.markdown("<center><img src='kgf_logo.png' width='130'></center>", unsafe_allow_html=True)
+
+# === SECTION STATISTIQUES ===
+st.markdown("## 📊 Statistiques de performance")
 try:
     df = pd.read_csv("performance.csv")
     st.dataframe(df, use_container_width=True)
     if "ratio" in df.columns:
         st.line_chart(df["ratio"])
-    st.success("✅ Données chargées depuis 'performance.csv'")
+        st.success("✅ Statistiques mises à jour automatiquement.")
 except Exception as e:
-    st.error(f"❌ Erreur de chargement : {e}")
+    st.warning(f"⚠️ Données non disponibles : {e}")
 
-# --- Moteur IA CALL/PUT intégré ---
-st.subheader("🧠 Analyse IA CALL/PUT")
+# === VALEUR AJOUTÉE KGF ===
+st.markdown("## 💡 Ce que kgfsignalCraft vous apporte")
+st.markdown("""
+- 📌 Analyse multi-indicateurs CALL/PUT (non-automatisée)
+- 📈 Fiabilité IA testée en environnement réel
+- 🧠 Dashboard orienté précision et transparence
+- 🛰️ Orienté scalabilité et branding visuel
+""")
 
-class IAEngine:
-    def __init__(self):
-        self.history = []
+# === TÉMOIGNAGES CLIENTS ===
+st.markdown("## 🗣️ Témoignages")
+st.markdown("""
+> “Ce projet sort du lot. On sent le travail derrière chaque signal.”  
+— **Khalid M.**, trader francophone 🇲🇦
 
-    def predict(self, pair):
-        prob_call = round(random.uniform(0.5, 0.9), 3)
-        prob_put = round(random.uniform(0.1, 0.5), 3)
-        signal = "CALL" if prob_call > prob_put else "PUT"
-        score = round(abs(prob_call - prob_put) * max(prob_call, prob_put), 3)
-        self.history.append({
-            "pair": pair,
-            "signal": signal,
-            "score": score,
-            "timestamp": datetime.datetime.utcnow().strftime('%H:%M:%S')
-        })
-        return signal, score
+> “KGF c’est une vraie stratégie, pas juste un bot.”  
+— **Cindy F.**, analyste en binaires 📊
 
-    def resume(self):
-        total = len(self.history)
-        calls = sum(1 for s in self.history if s["signal"] == "CALL")
-        puts = total - calls
-        avg = round(sum(s["score"] for s in self.history) / total, 3) if total else 0
-        return total, calls, puts, avg
+> “La clarté des tableaux et l’approche Telegram sont top.”  
+— **Jean-Michel**, utilisateur actif 🧠
+""")
 
-engine = IAEngine()
-pairs = ["EUR/USD", "BTC/USD", "AUD/JPY", "GBP/CHF", "USD/CAD"]
+# === ÉQUIPE KGF ===
+st.markdown("## 👥 Équipe KGF")
+cols = st.columns(3)
+with cols[0]:
+    st.markdown("### François")
+    st.markdown("🧠 Fondateur, IA Strategist")
+    st.markdown("📍 Douala, Cameroun")
 
-for pair in pairs:
-    signal, score = engine.predict(pair)
-    color = "#2ECC71" if signal == "CALL" else "#E74C3C"
-    icon = "🟢" if signal == "CALL" else "🔴"
-    st.markdown(
-        f"<div style='border:1px solid {color};padding:10px;border-radius:8px;margin-bottom:10px;'>"
-        f"<strong>{icon} {pair} → {signal}</strong><br>"
-        f"<span style='color:{color};font-weight:bold;'>Score : {score}</span>"
-        f"</div>",
-        unsafe_allow_html=True
-    )
+with cols[1]:
+    st.markdown("### KGF Bot")
+    st.markdown("🔹 Outil d’analyse multi-modèle")
+    st.markdown("🔹 Moteur de scoring adaptatif")
 
-# --- Résumé IA du jour ---
-st.markdown("### 📈 Résumé IA du jour")
-total, calls, puts, avg = engine.resume()
-st.metric("Total signaux", total)
-st.metric("CALL", calls)
-st.metric("PUT", puts)
-st.metric("Score moyen", avg)
+with cols[2]:
+    st.markdown("### Communauté")
+    st.markdown("🔹 Testeurs et Traders")
+    st.markdown("🔹 Groupe Telegram privé")
 
-# --- Footer Telegram ---
+# === CALL TO ACTION ===
+st.markdown("## 📩 Rejoignez le QG Telegram")
+st.markdown("""
+<div style="
+    background-color: #111;
+    padding: 30px;
+    border-radius: 12px;
+    color: #EEE;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(255,215,0,0.2);
+">
+  <h2 style="color: #FFD700;">Commencez maintenant</h2>
+  <p>Recevez les résultats & signaux en direct via notre channel Telegram :</p>
+  <a href='https://t.me/kgfempiredigital' target='_blank' style="
+      background-color: #FFD700;
+      color: black;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  ">📲 Rejoindre le Telegram</a>
+</div>
+""", unsafe_allow_html=True)
+
+# === SIGNATURE FINALE ===
 st.markdown("---")
-st.markdown("📩 Rejoins-nous sur Telegram → [KGF Empire Digital](https://t.me/kgfempiredigital)")
+st.markdown("""
+<div style="text-align:center; font-size:0.9em; color:gray; font-style:italic;">
+Site vitrine propulsé par <strong>KGF Empire Digital</strong><br>
+Designed by François | Vision & Code stratégique 💼📈
+</div>
+""", unsafe_allow_html=True)
