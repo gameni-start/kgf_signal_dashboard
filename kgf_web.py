@@ -1,30 +1,27 @@
 import streamlit as st
 import pandas as pd
+from PIL import Image
 import datetime
+import random
 
-# =============================================
-# 🔧 KGF SIGNAL ENGINE – Analyse IA CALL/PUT
-# =============================================
+# ====================================
+# 🔧 MOTEUR IA CALL/PUT
+# ====================================
 
 class KGFSignalEngine:
-    def __init__(self, model_call=None, model_put=None):
-        self.model_call = model_call
-        self.model_put = model_put
+    def __init__(self):
         self.history = []
 
-    def fused_prediction(self, input_data, pair_name):
-        # Simuler des probabilités si modèles non chargés
-        import random
-        prob_call = random.uniform(0.4, 0.9)
-        prob_put = random.uniform(0.1, 0.6)
-
+    def fused_prediction(self, pair_name):
+        prob_call = random.uniform(0.45, 0.9)
+        prob_put = random.uniform(0.1, 0.55)
         signal_type = "CALL" if prob_call > prob_put else "PUT"
         score = self.compute_signal_score(prob_call, prob_put)
 
         self.history.append({
             "pair": pair_name,
             "type": signal_type,
-            "score": score,
+            "score": round(score, 3),
             "prob_call": round(prob_call, 3),
             "prob_put": round(prob_put, 3),
             "timestamp": datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
@@ -35,68 +32,71 @@ class KGFSignalEngine:
     def compute_signal_score(self, prob_call, prob_put):
         dominance = abs(prob_call - prob_put)
         confidence = max(prob_call, prob_put)
-        return round(dominance * confidence, 3)
+        return dominance * confidence
 
-    def get_daily_summary(self):
+    def get_summary(self):
         total = len(self.history)
-        call_count = sum(1 for s in self.history if s['type'] == 'CALL')
+        call_count = sum(1 for s in self.history if s["type"] == "CALL")
         put_count = total - call_count
-        avg_score = round(sum(s['score'] for s in self.history) / total, 3) if total > 0 else 0
+        avg_score = round(sum(s["score"] for s in self.history) / total, 3) if total > 0 else 0
+        return total, call_count, put_count, avg_score
 
-        return {
-            "total_signals": total,
-            "call_count": call_count,
-            "put_count": put_count,
-            "average_score": avg_score
-        }
-
-# =============================================
-# 🚀 Streamlit Dashboard avec onglets
-# =============================================
+# ====================================
+# 🌐 PAGE PRINCIPALE
+# ====================================
 
 st.set_page_config(page_title="KGFsignalCraft", layout="wide")
 
-st.title("📊 Cockpit KGFsignalCraft")
-st.markdown("_Du silence des moqueries à la puissance des résultats._")
+# 🎬 Bannière animée
+st.video("kgf_banner.mp4")
 
-tab1, tab2 = st.tabs(["📈 Signal Trading", "🧠 Analyse IA"])
-
-# Onglet principal : données signal
-with tab1:
-    st.subheader("📊 Visualisation des données")
-    try:
-        df = pd.read_csv("performance.csv")
-        st.dataframe(df)
-        st.line_chart(df["ratio"])
-    except Exception as e:
-        st.warning("⚠️ Impossible de charger les données : " + str(e))
-
-    st.markdown("📩 Rejoins le QG officiel : [KGF EMPIRE DIGITAL](https://t.me/kgfempiredigital)")
-
-# Onglet IA : moteur d’analyse CALL/PUT
-with tab2:
-    st.subheader("🧠 Analyse IA des signaux")
-
-    kgf_engine = KGFSignalEngine()
-
-    # Exemple sur données fictives
-    pairs_test = ["EUR/USD", "AUD/JPY", "GBP/CHF", "BTC/USD"]
-    for pair in pairs_test:
-        signal, score = kgf_engine.fused_prediction(None, pair)
-        st.write(f"🔹 {pair} → {signal} | Score : {score}")
-
-    # Résumé global
-    summary = kgf_engine.get_daily_summary()
-    st.metric("Total Signaux", summary["total_signals"])
-    st.metric("CALL", summary["call_count"])
-    st.metric("PUT", summary["put_count"])
-    st.metric("Score Moyen", summary["average_score"])
-
-    # Historique
-    st.write("📜 Historique des signaux générés :")
-    st.dataframe(pd.DataFrame(kgf_engine.history))
-
-# Footer
+# 📣 Titre et accroche
+st.markdown("<h1 style='text-align:center;'>KGF Trading Signal Bot</h1>", unsafe_allow_html=True)
+st.markdown("<center><em>Du silence des moqueries à la puissance des résultats</em></center>", unsafe_allow_html=True)
 st.markdown("---")
-st.markdown("🎬 Chargement du cockpit KGF... Synchronisation du cerveau IA avec le marché.")
-st.markdown("📩 Telegram : [KGF EMPIRE DIGITAL](https://t.me/kgfempiredigital)")
+
+# 📊 SECTION : Performance classique
+st.subheader("📈 Ratios & Performances de marché")
+try:
+    df = pd.read_csv("performance.csv")
+    st.dataframe(df)
+
+    if "ratio" in df.columns:
+        st.line_chart(df["ratio"])
+
+    st.success("✅ Fichier 'performance.csv' chargé avec succès.")
+except Exception as e:
+    st.warning(f"⚠️ Erreur lors du chargement : {e}")
+
+st.markdown("---")
+
+# 🧠 SECTION : Analyse IA CALL/PUT
+st.subheader("🧠 Réflexion stratégique IA (Simulations CALL/PUT)")
+kgf_engine = KGFSignalEngine()
+
+pairs = ["EUR/USD", "BTC/USD", "AUD/JPY", "GBP/CHF", "USD/CAD"]
+for pair in pairs:
+    signal, score = kgf_engine.fused_prediction(pair)
+    couleur = "#2ECC71" if signal == "CALL" else "#E74C3C"
+    icone = "🟢" if signal == "CALL" else "🔴"
+
+    st.markdown(
+        f"<div style='border:1px solid {couleur};padding:10px;border-radius:8px;margin-bottom:10px;'>"
+        f"<strong>{icone} {pair} → {signal}</strong><br>"
+        f"<span style='color:{couleur};font-weight:bold;'>Score : {score}</span>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
+
+# 🔁 Résumé des signaux générés
+total, call_count, put_count, avg_score = kgf_engine.get_summary()
+st.markdown("### 🔎 Résumé IA du jour")
+st.metric("Total Signaux", total)
+st.metric("CALL", call_count)
+st.metric("PUT", put_count)
+st.metric("Score Moyen", avg_score)
+
+st.markdown("---")
+
+# 📱 FOOTER TELEGRAM
+st.markdown("📩 Rejoins notre QG sur Telegram → [KGF Empire Digital](https://t.me/kgfempiredigital)")
