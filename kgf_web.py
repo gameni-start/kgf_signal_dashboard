@@ -1,95 +1,102 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-from datetime import datetime
+import datetime
 
-st.set_page_config(page_title="KGFsignalCraft", layout="centered")
+# =============================================
+# 🔧 KGF SIGNAL ENGINE – Analyse IA CALL/PUT
+# =============================================
 
-# 💼 Header visuel
-st.markdown("<h1 style='text-align:center; color:#F5C518;'>KGFsignalCraft</h1>", unsafe_allow_html=True)
-st.image("kgf_banner.jpeg", use_container_width=True)
-st.markdown("<h4 style='text-align:center; color:white;'>Du silence des moqueries à la puissance des résultats.</h4>", unsafe_allow_html=True)
+class KGFSignalEngine:
+    def __init__(self, model_call=None, model_put=None):
+        self.model_call = model_call
+        self.model_put = model_put
+        self.history = []
 
-try:
-    # 📥 Lecture des données
-    df = pd.read_csv("performance.csv", header=None, names=["timestamp", "symbol", "direction", "signal_type", "result_usd"])
-    df["timestamp"] = pd.to_datetime(df["timestamp"], format="%Y-%m-%dT%H:%M:%S.%f")
-    df["day"] = df["timestamp"].dt.date
+    def fused_prediction(self, input_data, pair_name):
+        # Simuler des probabilités si modèles non chargés
+        import random
+        prob_call = random.uniform(0.4, 0.9)
+        prob_put = random.uniform(0.1, 0.6)
 
-    # ⏳ Sélection manuelle d'une date
-    target_date = datetime(2025, 7, 22).date()
-    today = df[df["day"] == target_date]
+        signal_type = "CALL" if prob_call > prob_put else "PUT"
+        score = self.compute_signal_score(prob_call, prob_put)
 
-    # 📊 Stats globales
-    call_count = len(today[today["direction"] == "CALL"])
-    put_count  = len(today[today["direction"] == "PUT"])
-    wins       = (today["result_usd"].astype(float) >= 0).sum()
-    pnl        = today["result_usd"].astype(float).sum()
-    ratio      = round((wins / len(today)) * 100, 2) if len(today) else 0
+        self.history.append({
+            "pair": pair_name,
+            "type": signal_type,
+            "score": score,
+            "prob_call": round(prob_call, 3),
+            "prob_put": round(prob_put, 3),
+            "timestamp": datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        })
 
-    # 💎 Résumé stylisé
-    st.markdown("""
-    <div style='border:1px solid #444; border-radius:10px; padding:15px; background-color:#111; color:#eee;'>
-        <h4 style='text-align:center;'>📊 Résumé du {} :</h4>
-        <ul style='list-style:none; padding-left:0; font-size:16px;'>
-            <li>✅ <b>CALL</b> : {}</li>
-            <li>🔻 <b>PUT</b> : {}</li>
-            <li>⚖️ <b>Ratio victoire</b> : {}%</li>
-            <li>💰 <b>P&L</b> : {:.2f} USD</li>
-        </ul>
-    </div>
-    """.format(target_date.strftime("%d %B %Y"), call_count, put_count, ratio, pnl), unsafe_allow_html=True)
+        return signal_type, score
 
-    # 📈 Histogramme CALL vs PUT
-    fig1 = px.histogram(today, x='direction', color='direction', title='Distribution des signaux',
-                        color_discrete_map={"CALL":"#00CC96", "PUT":"#EF553B"})
-    st.plotly_chart(fig1, use_container_width=True)
+    def compute_signal_score(self, prob_call, prob_put):
+        dominance = abs(prob_call - prob_put)
+        confidence = max(prob_call, prob_put)
+        return round(dominance * confidence, 3)
 
-    # 📈 Courbe P&L cumulé
-    today["pnl_cumulé"] = today["result_usd"].astype(float).cumsum()
-    fig2 = px.line(today, x="timestamp", y="pnl_cumulé", title="Évolution du P&L (cumulé)", markers=True)
-    st.plotly_chart(fig2, use_container_width=True)
+    def get_daily_summary(self):
+        total = len(self.history)
+        call_count = sum(1 for s in self.history if s['type'] == 'CALL')
+        put_count = total - call_count
+        avg_score = round(sum(s['score'] for s in self.history) / total, 3) if total > 0 else 0
 
-    # 🏆 Top Pairs du jour
-    top_pairs = today.groupby("symbol")["result_usd"].sum().sort_values(ascending=False).head(5)
-    st.markdown("### 🏆 Top Pairs du jour")
-    st.table(top_pairs.reset_index().rename(columns={"result_usd": "P&L total"}))
+        return {
+            "total_signals": total,
+            "call_count": call_count,
+            "put_count": put_count,
+            "average_score": avg_score
+        }
 
-    # 📋 Tableau complet des signaux
-    st.markdown("### 📋 Détails des signaux")
-    st.dataframe(today[["timestamp", "symbol", "direction", "signal_type", "result_usd"]].style.format({
-        "result_usd":"{:.2f}"
-    }), use_container_width=True)
+# =============================================
+# 🚀 Streamlit Dashboard avec onglets
+# =============================================
 
-except Exception as e:
-    st.error(f"📛 Erreur chargement des données : {e}")
+st.set_page_config(page_title="KGFsignalCraft", layout="wide")
 
-# 👥 Compteur Telegram (statique ou API futur)
-st.markdown("""
-<div style='text-align:center; margin-top:40px;'>
-    <h4>👥 Membres Telegram : <span style='color:#F5C518;'>+120</span></h4>
-</div>
-""", unsafe_allow_html=True)
+st.title("📊 Cockpit KGFsignalCraft")
+st.markdown("_Du silence des moqueries à la puissance des résultats._")
 
-# 📢 Lien Telegram stylisé
-st.markdown("""
-<div style='text-align:center; margin-top:15px;'>
-    <a href='https://t.me/kgfempiredigital' target='_blank'>
-        <button style='background-color:#F5C518; color:black; padding:12px 24px; font-size:18px; border:none; border-radius:8px;'>
-            📢 Rejoindre le canal Telegram
-        </button>
-    </a>
-</div>
-""", unsafe_allow_html=True)
+tab1, tab2 = st.tabs(["📈 Signal Trading", "🧠 Analyse IA"])
 
-# 🔴 WebSocket zone (à venir)
-st.markdown("""
-<div style='margin-top:50px;'>
-    <h4>🔴 Signaux en direct (bientôt disponibles)</h4>
-    <p style='color:gray;'>Le bot sera connecté en WebSocket pour affichage live des signaux.</p>
-</div>
-""", unsafe_allow_html=True)
+# Onglet principal : données signal
+with tab1:
+    st.subheader("📊 Visualisation des données")
+    try:
+        df = pd.read_csv("performance.csv")
+        st.dataframe(df)
+        st.line_chart(df["ratio"])
+    except Exception as e:
+        st.warning("⚠️ Impossible de charger les données : " + str(e))
 
-# 👣 Footer
+    st.markdown("📩 Rejoins le QG officiel : [KGF EMPIRE DIGITAL](https://t.me/kgfempiredigital)")
+
+# Onglet IA : moteur d’analyse CALL/PUT
+with tab2:
+    st.subheader("🧠 Analyse IA des signaux")
+
+    kgf_engine = KGFSignalEngine()
+
+    # Exemple sur données fictives
+    pairs_test = ["EUR/USD", "AUD/JPY", "GBP/CHF", "BTC/USD"]
+    for pair in pairs_test:
+        signal, score = kgf_engine.fused_prediction(None, pair)
+        st.write(f"🔹 {pair} → {signal} | Score : {score}")
+
+    # Résumé global
+    summary = kgf_engine.get_daily_summary()
+    st.metric("Total Signaux", summary["total_signals"])
+    st.metric("CALL", summary["call_count"])
+    st.metric("PUT", summary["put_count"])
+    st.metric("Score Moyen", summary["average_score"])
+
+    # Historique
+    st.write("📜 Historique des signaux générés :")
+    st.dataframe(pd.DataFrame(kgf_engine.history))
+
+# Footer
 st.markdown("---")
-st.markdown("<div style='text-align:center; font-size:14px;'>© 2025 — KGFsignalCraft par François</div>", unsafe_allow_html=True)
+st.markdown("🎬 Chargement du cockpit KGF... Synchronisation du cerveau IA avec le marché.")
+st.markdown("📩 Telegram : [KGF EMPIRE DIGITAL](https://t.me/kgfempiredigital)")
